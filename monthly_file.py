@@ -22,3 +22,5 @@ if __name__ == "__main__":
     monthly_file_path = join(year_data_path, str(month) + ".csv")
     taxi_data = YellowTaxiData(monthly_file_path, yellow_car_data_out_path, month, year, whether_data)
     taxi_data.read_and_process_csv()
+
+    print("prgram is over")
