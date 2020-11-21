@@ -165,7 +165,8 @@ class YellowTaxiRecord:
     # 14 tolls_amount,
     # 15 improvement_surcharge,
     # 16 total_amount
-    def __init__(self, raw_rec: List[str],  first_day_of_month: datetime,  last_day_of_month: datetime, whether_data: DataFrame):
+    def __init__(self, raw_rec: List[str], first_day_of_month: datetime, last_day_of_month: datetime,
+                 whether_data: DataFrame):
         self.__raw_rec = raw_rec
         # Keep required columns
         self.__pickup_datetime: datetime = datetime.datetime.strptime(raw_rec[1], "%Y-%m-%d%H:%M:%S")
@@ -214,7 +215,8 @@ class YellowTaxiRecord:
 
     @staticmethod
     def out_header() -> List[str]:
-        return ["date", "time_code", "pulid", "dolid", "duration", "weekday", "distance", "totalSnow_cm", "FeelsLikeC", "precipMM"]
+        return ["date", "time_code", "pulid", "dolid", "duration", "weekday", "distance", "totalSnow_cm", "FeelsLikeC",
+                "precipMM"]
 
     def get_valid_rec(self) -> Optional[List[str]]:
         if self.is_date_valid() and self.is_trip_duration_is_valid() and self.is_valid_trip_distance():
@@ -241,6 +243,10 @@ class YellowTaxiData(PreProcessor):
         self.__last_day_of_month = PreProcessor.last_day_of_month(self.__first_day_of_month)
         if whether_data is not None:
             self.__whether_data['date'] = to_datetime(self.__whether_data.date).dt.date
+
+    @staticmethod
+    def get_yellow_file_csv_format(year: int):
+        return "yellow_car_" + str(year) + "_{}.csv"
 
     def __create_empty_csv_file(self):
         csv_file = open(join(self._output_path, "yellow_car_" + str(self.__year) + "_" + str(self.__month) + ".csv"),
@@ -284,6 +290,28 @@ class YellowTaxiData(PreProcessor):
                         self.__data = []
             if count > 0:
                 self.__append_records()
+
+
+class GroupData:
+    def __init__(self, file_location: AnyPath, file_name_format: str = "{}.csv"):
+        self.__file_location = file_location
+        self.__file_name_format = file_name_format
+        self.__grouped_data = None
+
+    def count_by_grouping(self) -> DataFrame:
+        for month in range(1, 13):
+            print("***** Grouping start for month {} *****".format(month))
+            input_file = join(self.__file_location, self.__file_name_format.format(month))
+            data = read_csv(input_file)
+            data["month"] = month
+            grouped_month_data = data.groupby(['pulid', 'weekday', 'month', 'time_code', 'totalSnow_cm', 'FeelsLikeC',
+                                               'precipMM']).size().to_frame(name='count').reset_index()
+            if self.__grouped_data is None:
+                self.__grouped_data = grouped_month_data
+            else:
+                self.__grouped_data.append(grouped_month_data)
+            print("***** Grouping start for end {} *****".format(month))
+        return self.__grouped_data
 
 
 def process_weather_data(whether_data_out_path: AnyPath):
