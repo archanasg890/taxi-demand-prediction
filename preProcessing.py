@@ -104,9 +104,8 @@ class FetchHistoricalData:
                 self.fetch()
 
 
-class WhetherData(PreProcessor):
-    # Refer https://towardsdatascience.com/obtain-historical-weather-forecast-data-in-csv-format-using-python
-    # -5a6c090fc828
+class WeatherData(PreProcessor):
+    # Ref https://towardsdatascience.com/obtain-historical-weather-forecast-data-in-csv-format-using-python-5a6c090fc828
     __weather_data_frame: Optional[DataFrame] = None
 
     def __init__(self, output_path: str, month: int, year: int,
@@ -320,9 +319,9 @@ def process_weather_data(whether_data_out_path: AnyPath):
         year_data_path: AnyPath = join(whether_data_out_path, str(year))
         PreProcessor.make_dir(year_data_path)
         for month in range(1, 13):
-            whether_data = WhetherData(year_data_path, month, year, api_key)
-            whether_data.fetch_data()
-            whether_data.write_as_csv()
+            weather_data = WeatherData(year_data_path, month, year, api_key)
+            weather_data.fetch_data()
+            weather_data.write_as_csv()
 
 
 def main():
